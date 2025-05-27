@@ -68,15 +68,6 @@ class CharacterCollectionViewCell : UICollectionViewCell {
     
   }
   
-//  func config(image : String, nameText: String, speciesText: String, gender: String) {
-//    mainImage.loadImage(urlString: image)
-//    nameLabel.text = nameText
-//    speciesLabel.text = speciesText
-//    if let genderType = GenderType(rawValue: gender) {
-//      
-//    }
-//  }
-  
   func config(character: CharacterResponse.Character) {
     mainImage.loadImage(urlString: character.image)
     nameLabel.text = character.name

@@ -35,35 +35,14 @@ extension UIImageView {
 
 
 class ImageView: UIImageView {
-//  private var request: URLRequest? = nil
   private let session: URLSession = URLSession.shared
-  
-//  func loadImage(urlString: String) {
-//    guard let url = URL(string: urlString) else { return }
-//    request = URLRequest(url: url)
-//    guard let request else { return }
-//    session.dataTask(with: request) { [weak self] data, _, error in
-//      if let error = error {
-//        print("Error downloading image: \(error)")
-//        return
-//      }
-//      
-//      guard let data = data else { return }
-//      DispatchQueue.main.async {
-//        print("success: \(urlString)")
-//        self?.image = UIImage(data: data)
-//      }
-//    }.resume()
-//  }
   
   private var currentTask: URLSessionDataTask?
   func loadImage(urlString: String) {
-    // Cancel any previous image load
     currentTask?.cancel()
     
     guard let url = URL(string: urlString) else { return }
     
-    // Start new download task
     currentTask = URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
       if let error = error as? URLError, error.code != .cancelled {
         print("Image load failed: \(error)")
