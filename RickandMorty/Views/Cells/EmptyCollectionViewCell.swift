@@ -9,7 +9,6 @@ import UIKit
 
 class EmptyCollectionViewCell: UICollectionViewCell {
   
-  
   let centerView: UIView = {
     let cv = UIView()
     cv.backgroundColor = .purple.withAlphaComponent(0.7)
