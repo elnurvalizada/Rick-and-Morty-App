@@ -15,6 +15,7 @@ import SnapKit
 class HomeViewController: UIViewController {
     
     private let viewModel = HomeViewModel()
+    private var topViewHeightConstraint: NSLayoutConstraint? = nil
     
     var lastContentOffset: CGFloat = 0
     
@@ -91,11 +92,8 @@ class HomeViewController: UIViewController {
         return view
     }()
     
-    private var topViewHeightConstraint: NSLayoutConstraint? = nil
-    
     override func viewDidLoad() {
         super.viewDidLoad()
-        applyGradientBackground()
         setupConstraints()
         setupUI()
         
@@ -105,13 +103,16 @@ class HomeViewController: UIViewController {
             }
         }
         viewModel.loadCharacters()
-        searchBar.delegate = self
     }
     
     func setupUI() {
+        applyGradientBackground()
         view.backgroundColor = .systemPurple
+        
         filterCollectionView.dataSource = self
         filterCollectionView.delegate = self
+        
+        searchBar.delegate = self
         
         characterCollectionView.dataSource = self
         characterCollectionView.delegate = self
@@ -197,22 +198,25 @@ class HomeViewController: UIViewController {
 
 
 extension HomeViewController : UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        if collectionView == filterCollectionView {
-            return viewModel.filters.count
+    private func collectionType(for collectionView: UICollectionView) -> HomeCollectionType {
+            guard let type = HomeCollectionType.from(collectionView, in: self) else {
+                fatalError("Unknown collection view")
+            }
+            return type
         }
-        else {
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        switch collectionType(for: collectionView) {
+        case .character:
             return viewModel.characters.count > 0 ? viewModel.characters.count : 1
+        case .filter:
+            return viewModel.filters.count
         }
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        if collectionView == filterCollectionView {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "FilteredCollectionViewCell", for: indexPath) as! FilteredCollectionViewCell
-            cell.config(title: viewModel.filters[indexPath.row].name, selectedValue: viewModel.filters[indexPath.row].selectedValue)
-            return cell
-        }
-        else {
+        switch collectionType(for: collectionView) {
+        case .character:
             if viewModel.characters.isEmpty {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "EmptyCollectionViewCell", for: indexPath) as! EmptyCollectionViewCell
                 return cell
@@ -220,36 +224,41 @@ extension HomeViewController : UICollectionViewDelegate, UICollectionViewDataSou
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CharacterCollectionViewCell", for: indexPath) as! CharacterCollectionViewCell
             cell.config(character: viewModel.characters[indexPath.item])
             return cell
+        case .filter:
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "FilteredCollectionViewCell", for: indexPath) as! FilteredCollectionViewCell
+            cell.config(title: viewModel.filters[indexPath.row].name, selectedValue: viewModel.filters[indexPath.row].selectedValue)
+            return cell
         }
-        
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        if collectionView == characterCollectionView {
+        switch collectionType(for: collectionView) {
+        case .character:
             let width: CGFloat = (collectionView.frame.width - 20) / 2
             return .init(width: width, height: 220)
-        }
-        else {
+        case .filter:
             let width: CGFloat = (collectionView.frame.width + 20) / 3
             return .init(width: width, height: 30)
         }
-        
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        if collectionView == characterCollectionView {
+        switch collectionType(for: collectionView) {
+        case .character:
             let selectedCharacter = viewModel.characters[indexPath.row]
             let vc = DetailViewController(character: selectedCharacter)
             navigationController?.pushViewController(vc, animated: true)
-        }
-        else {
+        case .filter:
             showGenderFilter(from: self.view, filters: viewModel.filters[indexPath.row].filters, filtertype: viewModel.filters[indexPath.row].name, index: indexPath.row)
         }
     }
     
     func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        if collectionView == characterCollectionView {
+        switch collectionType(for: collectionView) {
+        case .character:
             viewModel.loadMoreCharactersIfNeeded(currentIndex: indexPath.item)
+        case .filter:
+            break
         }
     }
     
