@@ -17,6 +17,14 @@ class HomeViewController: UIViewController {
     private let viewModel = HomeViewModel()
     private var topViewHeightConstraint: NSLayoutConstraint? = nil
     
+    private var activityIndicator: UIActivityIndicatorView = {
+        let activityIndicator = UIActivityIndicatorView(style: .large)
+        activityIndicator.hidesWhenStopped = true
+        activityIndicator.color = .white
+        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+        return activityIndicator
+    }()
+    
     var lastContentOffset: CGFloat = 0
     
     let titleLabel: UILabel = {
@@ -96,13 +104,19 @@ class HomeViewController: UIViewController {
         super.viewDidLoad()
         setupConstraints()
         setupUI()
-        
         viewModel.onCharactersUpdated = { [weak self] in
             DispatchQueue.main.async {
                 self?.characterCollectionView.reloadData()
             }
         }
         viewModel.loadCharacters()
+        
+        viewModel.onLoadingStateChanged = { [weak self] isLoading in
+            DispatchQueue.main.async {
+                isLoading ? self?.activityIndicator.startAnimating() : self?.activityIndicator.stopAnimating()
+            }
+        }
+
     }
     
     func setupUI() {
@@ -140,6 +154,8 @@ class HomeViewController: UIViewController {
             filterCollectionView
         ].forEach(filterStack.addArrangedSubview)
         
+        view.addSubview(activityIndicator)
+        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             topView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 32),
             topView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 32),
@@ -163,6 +179,9 @@ class HomeViewController: UIViewController {
             characterCollectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 32),
             characterCollectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -32),
             characterCollectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -8),
+            
+            activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
         
         topViewHeightConstraint = topView.heightAnchor.constraint(equalToConstant: 0)
@@ -179,6 +198,7 @@ class HomeViewController: UIViewController {
         
         filters.forEach { filter in
             alert.addAction(UIAlertAction(title: filter, style: .default) { _ in
+                self.activityIndicator.startAnimating()
                 self.viewModel.updateFilter(category: filtertype, value: filter)
                 self.removeFilterButton.isHidden = false
             })
@@ -208,7 +228,10 @@ extension HomeViewController : UICollectionViewDelegate, UICollectionViewDataSou
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         switch collectionType(for: collectionView) {
         case .character:
-            return viewModel.characters.count > 0 ? viewModel.characters.count : 1
+            if viewModel.isLoading {
+                return 0
+            }
+            return viewModel.characters.isEmpty ? 1: viewModel.characters.count
         case .filter:
             return viewModel.filters.count
         }
@@ -222,7 +245,7 @@ extension HomeViewController : UICollectionViewDelegate, UICollectionViewDataSou
                 return cell
             }
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CharacterCollectionViewCell", for: indexPath) as! CharacterCollectionViewCell
-            cell.config(character: viewModel.characters[indexPath.item])
+            if !viewModel.characters.isEmpty { cell.config(character: viewModel.characters[indexPath.item]) }
             return cell
         case .filter:
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "FilteredCollectionViewCell", for: indexPath) as! FilteredCollectionViewCell

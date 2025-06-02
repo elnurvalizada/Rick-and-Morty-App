@@ -19,9 +19,10 @@ class HomeViewModel {
     var selectedFilters: [String: String] = [:]
     
     var onCharactersUpdated: (() -> Void)?
-    
+    var onLoadingStateChanged: ((Bool) -> Void)?
+
+    private(set) var isLoading = false
     private var currentPage = 1
-    private var isLoading = false
     private var hasMoreData = true
     
     private var searchedText: String? = nil
@@ -31,6 +32,7 @@ class HomeViewModel {
         guard !isLoading else { return }
         isLoading = true
         
+        onLoadingStateChanged?(true)
         if reset {
             currentPage = 1
             hasMoreData = true
@@ -44,6 +46,7 @@ class HomeViewModel {
         ) { [weak self] result in
             guard let self else { return }
             self.isLoading = false
+            self.onLoadingStateChanged?(false)
             switch result {
             case .success(let response):
                 self.characters += response.characters
@@ -64,6 +67,8 @@ class HomeViewModel {
     }
     
     func updateFilter(category: String, value: String) {
+        characters = []
+        onCharactersUpdated?()
         selectedFilters[category.lowercased()] = value
         if let index = filters.firstIndex(where: { $0.name == category }) {
             filters[index].selectedValue = value
