@@ -20,7 +20,7 @@ class HomeViewModel {
     
     var onCharactersUpdated: (() -> Void)?
     var onLoadingStateChanged: ((Bool) -> Void)?
-
+    
     private(set) var isLoading = false
     private var currentPage = 1
     private var hasMoreData = true

@@ -9,7 +9,7 @@ import Foundation
 
 
 struct FilterModel {
-  var name: String
-  var filters: [String]
-  var selectedValue : String? = nil
+    var name: String
+    var filters: [String]
+    var selectedValue : String? = nil
 }

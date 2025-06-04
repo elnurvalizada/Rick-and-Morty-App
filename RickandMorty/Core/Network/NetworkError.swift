@@ -8,9 +8,9 @@
 import Foundation
 
 enum NetworkError: Error {
-  case invalidURL
-  case decodingFailed
-  case noData
-  case requestFailed(Error)
+    case invalidURL
+    case decodingFailed
+    case noData
+    case requestFailed(Error)
 }
 

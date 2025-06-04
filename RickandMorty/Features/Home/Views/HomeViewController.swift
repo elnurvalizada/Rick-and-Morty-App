@@ -116,7 +116,7 @@ class HomeViewController: UIViewController {
                 isLoading ? self?.activityIndicator.startAnimating() : self?.activityIndicator.stopAnimating()
             }
         }
-
+        
     }
     
     func setupUI() {
@@ -219,11 +219,11 @@ class HomeViewController: UIViewController {
 
 extension HomeViewController : UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     private func collectionType(for collectionView: UICollectionView) -> HomeCollectionType {
-            guard let type = HomeCollectionType.from(collectionView, in: self) else {
-                fatalError("Unknown collection view")
-            }
-            return type
+        guard let type = HomeCollectionType.from(collectionView, in: self) else {
+            fatalError("Unknown collection view")
         }
+        return type
+    }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         switch collectionType(for: collectionView) {
